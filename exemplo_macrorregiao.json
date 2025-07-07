@@ -1,0 +1,39 @@
+{
+  "macrorregiao_regiao_saude_municipios": [
+    {
+      "codigo_municipio": "150010",
+      "nome_municipio": "Abaetetuba",
+      "uf": "PA",
+      "macrorregiao_saude": "Metropolitana I",
+      "regiao_saude": "Metropolitana I"
+    },
+    {
+      "codigo_municipio": "150020",
+      "nome_municipio": "Acarí",
+      "uf": "PA",
+      "macrorregiao_saude": "Metropolitana II",
+      "regiao_saude": "Metropolitana II"
+    },
+    {
+      "codigo_municipio": "150030",
+      "nome_municipio": "Afuá",
+      "uf": "PA",
+      "macrorregiao_saude": "Marajó",
+      "regiao_saude": "Marajó"
+    },
+    {
+      "codigo_municipio": "150040",
+      "nome_municipio": "Água Azul do Norte",
+      "uf": "PA",
+      "macrorregiao_saude": "Carajás",
+      "regiao_saude": "Carajás"
+    },
+    {
+      "codigo_municipio": "150050",
+      "nome_municipio": "Alenquer",
+      "uf": "PA",
+      "macrorregiao_saude": "Baixo Amazonas",
+      "regiao_saude": "Baixo Amazonas"
+    }
+  ]
+}

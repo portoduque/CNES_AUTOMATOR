@@ -1,0 +1,17 @@
+# Dependências do CNES Automator Fast
+# Versão assíncrona otimizada para consultas na API do CNES
+
+# Biblioteca principal para requisições HTTP assíncronas
+aiohttp>=3.8.0
+
+# Biblioteca para processamento assíncrono (incluída no Python 3.7+)
+# asyncio - já incluído no Python padrão
+
+# Outras dependências já incluídas no Python padrão:
+# - json
+# - time
+# - os
+# - datetime
+# - typing
+# - logging
+# - sys
