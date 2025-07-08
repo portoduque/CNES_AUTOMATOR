@@ -27,12 +27,48 @@ from typing import List, Dict, Any, Tuple
 import logging
 import sys
 
+def safe_log_message(message: str) -> str:
+    """
+    Sanitiza mensagens de log para compatibilidade com Windows
+    Remove emojis problemáticos em sistemas que não suportam UTF-8
+    """
+    if os.name == 'nt':  # Windows
+        # Substitui emojis por equivalentes ASCII
+        emoji_replacements = {
+            '🏥': '[HOSPITAL]',
+            '📂': '[FOLDER]',
+            '✅': '[OK]',
+            '❌': '[ERROR]',
+            '🚀': '[ROCKET]',
+            '⚡': '[LIGHTNING]',
+            '📦': '[PACKAGE]',
+            '🔗': '[LINK]',
+            '🛠️': '[TOOLS]',
+            '🗺️': '[MAP]',
+            '📊': '[CHART]',
+            '⏱️': '[TIMER]',
+            '🔮': '[CRYSTAL]',
+            '📋': '[CLIPBOARD]',
+            '📁': '[FILE]',
+            '📈': '[GRAPH]',
+            '💾': '[DISK]',
+            '🔄': '[REFRESH]',
+            '🎉': '[PARTY]',
+            '⚠️': '[WARNING]',
+            '🗑️': '[TRASH]'
+        }
+        
+        for emoji, replacement in emoji_replacements.items():
+            message = message.replace(emoji, replacement)
+    
+    return message
+
 # Configuração de logging para acompanhar o progresso
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('cnes_automator.log'),
+        logging.FileHandler('cnes_automator.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -209,7 +245,7 @@ class CNESAPIAutomator:
         Returns:
             List[str]: Lista de códigos CNES
         """
-        logging.info(f"📂 Carregando códigos CNES do arquivo: {arquivo_entrada}")
+        logging.info(safe_log_message(f"📂 Carregando códigos CNES do arquivo: {arquivo_entrada}"))
         
         try:
             with open(arquivo_entrada, 'r', encoding='utf-8') as arquivo:
@@ -240,7 +276,7 @@ class CNESAPIAutomator:
             # Remove duplicatas e códigos vazios
             codigos = list(set([codigo for codigo in codigos if codigo.strip()]))
             
-            logging.info(f"✅ Carregados {len(codigos)} códigos CNES únicos")
+            logging.info(safe_log_message(f"✅ Carregados {len(codigos)} códigos CNES únicos"))
             
             if not codigos:
                 raise ValueError("Nenhum código CNES válido encontrado no arquivo")
@@ -248,7 +284,7 @@ class CNESAPIAutomator:
             return codigos
             
         except Exception as e:
-            logging.error(f"❌ Erro ao carregar arquivo: {e}")
+            logging.error(safe_log_message(f"❌ Erro ao carregar arquivo: {e}"))
             raise
 
     async def consultar_estabelecimento_async(self, session: aiohttp.ClientSession, codigo_cnes: str) -> Tuple[bool, Dict[str, Any]]:
@@ -411,8 +447,8 @@ class CNESAPIAutomator:
         print(f"📦 Dividido em {len(lotes)} lotes")
         print("=" * 60)
         
-        logging.info(f"🚀 Iniciando processamento assíncrono de {len(codigos_cnes)} códigos CNES")
-        logging.info(f"⚡ Configuração: {self.concurrent_requests} requisições simultâneas")
+        logging.info(safe_log_message(f"🚀 Iniciando processamento assíncrono de {len(codigos_cnes)} códigos CNES"))
+        logging.info(safe_log_message(f"⚡ Configuração: {self.concurrent_requests} requisições simultâneas"))
         
         self.stats['inicio_execucao'] = datetime.now().isoformat()
         
@@ -424,7 +460,7 @@ class CNESAPIAutomator:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         arquivo_backup = f"cnes_backup_{timestamp}.json"
         
-        logging.info(f"📦 Dividido em {len(lotes)} lotes para processamento")
+        logging.info(safe_log_message(f"📦 Dividido em {len(lotes)} lotes para processamento"))
         
         # Inicializa o tracker de progresso
         progress_tracker = ProgressTracker(len(codigos_cnes), "🏥 Consultando API CNES")
@@ -479,7 +515,7 @@ class CNESAPIAutomator:
                         await asyncio.sleep(self.delay_between_batches)
         
         except Exception as e:
-            logging.error(f"❌ Erro durante sessão assíncrona: {e}")
+            logging.error(safe_log_message(f"❌ Erro durante sessão assíncrona: {e}"))
             raise
         
         finally:
@@ -521,18 +557,18 @@ class CNESAPIAutomator:
             }
         }
         
-        logging.info(f"✅ Processamento assíncrono concluído!")
-        logging.info(f"📈 Sucessos: {len(estabelecimentos_validos)}")
-        logging.info(f"❌ Erros: {len(erros_encontrados)}")
-        logging.info(f"📊 Taxa de sucesso: {resultado_consolidado['resumo']['taxa_sucesso']}")
-        logging.info(f"⚡ Velocidade média: {resultado_consolidado['resumo']['velocidade_media']}")
-        logging.info(f"⏱️ Tempo total: {tempo_execucao:.1f} segundos")
+        logging.info(safe_log_message(f"✅ Processamento assíncrono concluído!"))
+        logging.info(safe_log_message(f"📈 Sucessos: {len(estabelecimentos_validos)}"))
+        logging.info(safe_log_message(f"❌ Erros: {len(erros_encontrados)}"))
+        logging.info(safe_log_message(f"📊 Taxa de sucesso: {resultado_consolidado['resumo']['taxa_sucesso']}"))
+        logging.info(safe_log_message(f"⚡ Velocidade média: {resultado_consolidado['resumo']['velocidade_media']}"))
+        logging.info(safe_log_message(f"⏱️ Tempo total: {tempo_execucao:.1f} segundos"))
         
         # Remove arquivo de backup se processamento foi bem-sucedido
         try:
             if os.path.exists(arquivo_backup):
                 os.remove(arquivo_backup)
-                logging.info(f"🗑️ Backup temporário removido: {arquivo_backup}")
+                logging.info(safe_log_message(f"🗑️ Backup temporário removido: {arquivo_backup}"))
         except:
             pass
         
@@ -547,7 +583,7 @@ class CNESAPIAutomator:
             arquivo_saida (str): Caminho do arquivo de saída
         """
         try:
-            logging.info(f"💾 Salvando resultados em: {arquivo_saida}")
+            logging.info(safe_log_message(f"💾 Salvando resultados em: {arquivo_saida}"))
             
             # Primeiro, valida se os dados podem ser serializados
             json_string = json.dumps(dados, ensure_ascii=False, indent=2, cls=DateTimeEncoder)
@@ -563,22 +599,22 @@ class CNESAPIAutomator:
             with open(arquivo_saida, 'r', encoding='utf-8') as arquivo:
                 dados_verificacao = json.load(arquivo)
             
-            logging.info(f"✅ Arquivo salvo e verificado com sucesso!")
-            logging.info(f"📁 Tamanho: {tamanho_arquivo:,} bytes")
-            logging.info(f"📊 Estabelecimentos salvos: {len(dados_verificacao.get('estabelecimentos', []))}")
-            logging.info(f"❌ Erros salvos: {len(dados_verificacao.get('erros', []))}")
+            logging.info(safe_log_message(f"✅ Arquivo salvo e verificado com sucesso!"))
+            logging.info(safe_log_message(f"📁 Tamanho: {tamanho_arquivo:,} bytes"))
+            logging.info(safe_log_message(f"📊 Estabelecimentos salvos: {len(dados_verificacao.get('estabelecimentos', []))}"))
+            logging.info(safe_log_message(f"❌ Erros salvos: {len(dados_verificacao.get('erros', []))}"))
             
         except Exception as e:
-            logging.error(f"❌ Erro ao salvar arquivo: {e}")
+            logging.error(safe_log_message(f"❌ Erro ao salvar arquivo: {e}"))
             
             # Tenta salvar um arquivo de emergência sem formatação
             try:
                 arquivo_emergencia = arquivo_saida.replace('.json', '_emergencia.json')
                 with open(arquivo_emergencia, 'w', encoding='utf-8') as arquivo:
                     json.dump(dados, arquivo, ensure_ascii=False, cls=DateTimeEncoder)
-                logging.info(f"💾 Arquivo de emergência salvo: {arquivo_emergencia}")
+                logging.info(safe_log_message(f"💾 Arquivo de emergência salvo: {arquivo_emergencia}"))
             except Exception as e2:
-                logging.error(f"❌ Falhou também no arquivo de emergência: {e2}")
+                logging.error(safe_log_message(f"❌ Falhou também no arquivo de emergência: {e2}"))
             
             raise
 
@@ -610,7 +646,7 @@ class CNESMacrorregiaeMerger:
         Carrega os dados de macrorregião do arquivo JSON e cria índice por código de município
         """
         try:
-            logging.info(f"📂 Carregando dados de macrorregião de: {self.arquivo_macrorregiao}")
+            logging.info(safe_log_message(f"📂 Carregando dados de macrorregião de: {self.arquivo_macrorregiao}"))
             
             with open(self.arquivo_macrorregiao, 'r', encoding='utf-8') as arquivo:
                 dados = json.load(arquivo)
@@ -640,10 +676,10 @@ class CNESMacrorregiaeMerger:
                         'populacao_estimada_ibge_2022': item.get('populacao_estimada_ibge_2022')
                     }
             
-            logging.info(f"✅ Carregados dados de {len(self.dados_macrorregiao)} municípios")
+            logging.info(safe_log_message(f"✅ Carregados dados de {len(self.dados_macrorregiao)} municípios"))
             
         except Exception as e:
-            logging.error(f"❌ Erro ao carregar dados de macrorregião: {e}")
+            logging.error(safe_log_message(f"❌ Erro ao carregar dados de macrorregião: {e}"))
             raise
     
     def mesclar_dados_unidade(self, unidade_saude: Dict[str, Any]) -> Dict[str, Any]:
@@ -678,16 +714,20 @@ class CNESMacrorregiaeMerger:
             if 'codigo_uf' in dados_macro_limpos:
                 del dados_macro_limpos['codigo_uf']
             
+            # Adiciona o codigo_municipio como chave primária dentro dos dados de macrorregião
+            # Mantém o mesmo tipo de dados (int) do estabelecimento principal
+            dados_macro_limpos['codigo_municipio'] = int(codigo_municipio)
+            
             # Adiciona os dados de macrorregião limpos em uma seção específica
             unidade_mesclada['dados_macrorregiao'] = dados_macro_limpos
             
-            self.logger.info(f"✅ Mesclagem bem-sucedida para código município: {codigo_municipio}")
+            self.logger.info(safe_log_message(f"✅ Mesclagem bem-sucedida para código município: {codigo_municipio}"))
             
         else:
             # Caso não encontre o código do município
             unidade_mesclada['dados_macrorregiao'] = None
             
-            self.logger.warning(f"⚠️ Código município não encontrado: {codigo_municipio}")
+            self.logger.warning(safe_log_message(f"⚠️ Código município não encontrado: {codigo_municipio}"))
         
         return unidade_mesclada
     
@@ -700,7 +740,7 @@ class CNESMacrorregiaeMerger:
             arquivo_saida (str): Caminho para salvar o arquivo mesclado
         """
         try:
-            logging.info(f"🔄 Iniciando mesclagem de arquivo: {arquivo_entrada}")
+            logging.info(safe_log_message(f"🔄 Iniciando mesclagem de arquivo: {arquivo_entrada}"))
             
             # Carrega os dados do arquivo de entrada
             with open(arquivo_entrada, 'r', encoding='utf-8') as arquivo:
@@ -776,18 +816,18 @@ class CNESMacrorregiaeMerger:
             # Verifica se o arquivo foi salvo corretamente
             tamanho_arquivo = os.path.getsize(arquivo_saida)
             
-            logging.info(f"✅ Mesclagem concluída com sucesso!")
-            logging.info(f"📁 Arquivo mesclado salvo: {arquivo_saida}")
-            logging.info(f"📊 Tamanho do arquivo: {tamanho_arquivo:,} bytes")
-            logging.info(f"🏥 Total de unidades processadas: {stats_mesclagem['total_unidades']}")
-            logging.info(f"✅ Mesclagens bem-sucedidas: {stats_mesclagem['mesclagens_bem_sucedidas']}")
-            logging.info(f"❌ Mesclagens falharam: {stats_mesclagem['mesclagens_falharam']}")
-            logging.info(f"📈 Taxa de sucesso: {(stats_mesclagem['mesclagens_bem_sucedidas']/stats_mesclagem['total_unidades']*100):.1f}%")
+            logging.info(safe_log_message(f"✅ Mesclagem concluída com sucesso!"))
+            logging.info(safe_log_message(f"📁 Arquivo mesclado salvo: {arquivo_saida}"))
+            logging.info(safe_log_message(f"📊 Tamanho do arquivo: {tamanho_arquivo:,} bytes"))
+            logging.info(safe_log_message(f"🏥 Total de unidades processadas: {stats_mesclagem['total_unidades']}"))
+            logging.info(safe_log_message(f"✅ Mesclagens bem-sucedidas: {stats_mesclagem['mesclagens_bem_sucedidas']}"))
+            logging.info(safe_log_message(f"❌ Mesclagens falharam: {stats_mesclagem['mesclagens_falharam']}"))
+            logging.info(safe_log_message(f"📈 Taxa de sucesso: {(stats_mesclagem['mesclagens_bem_sucedidas']/stats_mesclagem['total_unidades']*100):.1f}%"))
             
             return dados_saida
             
         except Exception as e:
-            logging.error(f"❌ Erro durante mesclagem: {e}")
+            logging.error(safe_log_message(f"❌ Erro durante mesclagem: {e}"))
             raise
 
 def main():
@@ -918,7 +958,7 @@ def main():
                 print(f"   - Tempo total: {resultados['metadados']['tempo_execucao_segundos']:.1f} segundos")
                 
         except Exception as e:
-            logging.error(f"❌ Erro durante processamento integrado assíncrono: {e}")
+            logging.error(safe_log_message(f"❌ Erro durante processamento integrado assíncrono: {e}"))
             print(f"❌ Erro: {e}")
     
     # Executa o processamento assíncrono
@@ -927,7 +967,7 @@ def main():
     except KeyboardInterrupt:
         print("\n❌ Processamento interrompido pelo usuário")
     except Exception as e:
-        logging.error(f"❌ Erro ao executar processamento assíncrono: {e}")
+        logging.error(safe_log_message(f"❌ Erro ao executar processamento assíncrono: {e}"))
         print(f"❌ Erro: {e}")
 
 if __name__ == "__main__":
